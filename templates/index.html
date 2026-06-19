@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gastos</title>
+  <style>
+    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 1rem; }
+    .tx { border-bottom: 1px solid #eee; padding: 0.5rem 0; }
+    .negativo { color: #e74c3c; }
+    .positivo { color: #27ae60; }
+    input[type=file], button { margin: 0.5rem 0; padding: 0.5rem 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Controle de Gastos</h1>
+
+  <input type="file" id="ofx" accept=".ofx">
+  <button onclick="enviar()">Importar extrato</button>
+  <p id="msg"></p>
+
+  <div id="lista"></div>
+
+  <script>
+    async function enviar() {
+      const arquivo = document.getElementById("ofx").files[0];
+      if (!arquivo) return;
+      const form = new FormData();
+      form.append("ofx", arquivo);
+      const r = await fetch("/upload", { method: "POST", body: form });
+      const d = await r.json();
+      document.getElementById("msg").textContent = `${d.inseridas} transações importadas`;
+      carregar();
+    }
+
+    async function carregar() {
+      const r = await fetch("/api/transacoes");
+      const txs = await r.json();
+      document.getElementById("lista").innerHTML = txs.map(tx => `
+        <div class="tx">
+          <div>${tx.descricao}</div>
+          <div>${tx.data} — <small>${tx.categoria}</small></div>
+          <div class="${tx.valor < 0 ? 'negativo' : 'positivo'}">
+            R$ ${Math.abs(tx.valor).toFixed(2)}
+          </div>
+        </div>
+      `).join("");
+    }
+
+    carregar();
+  </script>
+</body>
+</html>
