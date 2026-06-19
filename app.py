@@ -56,44 +56,69 @@ def extrair_pdf(arquivo_bytes):
         texto += pagina.get_text()
 
     transacoes = []
-    linhas = texto.splitlines()
 
-    for i, linha in enumerate(linhas):
-        # Tenta encontrar padrão: data DD/MM/AAAA seguida de descrição e valor
-        match_data = re.search(r'(\d{2}/\d{2}/\d{4})', linha)
-        if not match_data:
-            continue
+    # --- COMPRAS COM CARTÃO DE DÉBITO ---
+    # Formato: 01/05 4893.3185 ESTABELECIMENTO 36,89
+    for m in re.finditer(
+        r'(\d{2}/\d{2})\s+[\d.]+\s+(.+?)\s+(\d{1,3}(?:\.\d{3})*,\d{2})\s*$',
+        texto, re.MULTILINE
+    ):
+        data_raw, memo, valor_raw = m.group(1), m.group(2).strip(), m.group(3)
+        ano = "2026"
+        data = f"{ano}-{data_raw[3:5]}-{data_raw[0:2]}"
+        valor = -float(valor_raw.replace(".", "").replace(",", "."))
+        tid = re.sub(r'\W+', '', f"debito{data}{memo}")[:60]
+        transacoes.append({"id": tid, "data": data, "memo": memo, "valor": valor})
 
-        data_raw = match_data.group(1)
-        data = f"{data_raw[6:]}-{data_raw[3:5]}-{data_raw[0:2]}"
+    # --- PIX ENVIADOS (Comprovantes de Pagamento) ---
+    # Formato: 01/05 INTERNET BANKING PIX FAVORECIDO ISPB 0000 0000... VALOR
+    for m in re.finditer(
+        r'(\d{2}/\d{2})\s+INTERNET BANKING\s+PIX\s+(.+?)\s+\d{8}\s+0000\s+\S+\s+(\d{1,3}(?:\.\d{3})*,\d{2})',
+        texto, re.MULTILINE
+    ):
+        data_raw, memo, valor_raw = m.group(1), m.group(2).strip(), m.group(3)
+        ano = "2026"
+        data = f"{ano}-{data_raw[3:5]}-{data_raw[0:2]}"
+        valor = -float(valor_raw.replace(".", "").replace(",", "."))
+        tid = re.sub(r'\W+', '', f"pix{data}{memo}")[:60]
+        transacoes.append({"id": tid, "data": data, "memo": f"PIX {memo}", "valor": valor})
 
-        # Pega o restante da linha como descrição
-        resto = linha[match_data.end():].strip()
+    # --- PIX RECEBIDOS (seção de movimentação) ---
+    for m in re.finditer(
+        r'PIX RECEBIDO\s*\n(.+?)\n.*?(\d{1,3}(?:\.\d{3})*,\d{2})',
+        texto, re.MULTILINE
+    ):
+        favorecido = m.group(1).strip()
+        valor_raw  = m.group(2)
+        # Tenta pegar data da linha anterior
+        inicio = m.start()
+        trecho = texto[max(0, inicio-30):inicio]
+        data_m = re.search(r'(\d{2}/\d{2})', trecho)
+        data = f"2026-{data_m.group(1)[3:5]}-{data_m.group(1)[0:2]}" if data_m else "2026-05-01"
+        valor = float(valor_raw.replace(".", "").replace(",", "."))
+        tid = re.sub(r'\W+', '', f"recebido{data}{favorecido}")[:60]
+        transacoes.append({"id": tid, "data": data, "memo": f"PIX RECEBIDO {favorecido}", "valor": valor})
 
-        # Procura valor no padrão brasileiro: 1.234,56 ou -1.234,56
-        match_valor = re.search(r'(-?\d{1,3}(?:\.\d{3})*,\d{2})', resto)
-        if not match_valor:
-            # Tenta na próxima linha
-            if i + 1 < len(linhas):
-                match_valor = re.search(r'(-?\d{1,3}(?:\.\d{3})*,\d{2})', linhas[i+1])
+    # --- IOF e JUROS ---
+    for m in re.finditer(
+        r'(IOF[^\n]+|JUROS[^\n]+)\n.*?(\d{1,3}(?:\.\d{3})*,\d{2})-',
+        texto, re.MULTILINE
+    ):
+        memo      = m.group(1).strip()
+        valor_raw = m.group(2)
+        valor     = -float(valor_raw.replace(".", "").replace(",", "."))
+        tid       = re.sub(r'\W+', '', f"taxa{memo}")[:60]
+        transacoes.append({"id": tid, "data": "2026-05-01", "memo": memo, "valor": valor})
 
-        if not match_valor:
-            continue
+    # Remove duplicatas por id
+    vistos = set()
+    unicas = []
+    for t in transacoes:
+        if t["id"] not in vistos:
+            vistos.add(t["id"])
+            unicas.append(t)
 
-        valor_raw = match_valor.group(1).replace(".", "").replace(",", ".")
-        valor = float(valor_raw)
-
-        memo = resto.replace(match_valor.group(1), "").strip() or f"transacao_{data}"
-        tid = re.sub(r'\W+', '', f"{data}{memo}")[:50]
-
-        transacoes.append({
-            "id": tid,
-            "data": data,
-            "memo": memo or "Sem descrição",
-            "valor": valor
-        })
-
-    return transacoes
+    return unicas
 
 def salvar(cur, transacoes):
     inseridas = 0
