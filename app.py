@@ -24,14 +24,10 @@ def categorizar(descricao):
     return "outros"
 
 def get_conn():
-    url = urlparse(os.environ["DATABASE_URL"])
-    return psycopg2.connect(
-        dbname=url.path[1:],
-        user=url.username,
-        password=url.password,
-        host=url.hostname,
-        port=url.port
-    )
+    db_url = os.environ["DATABASE_URL"]
+    if db_url.startswith("postgres://"):
+        db_url = db_url.replace("postgres://", "postgresql://", 1)
+    return psycopg2.connect(db_url)
 
 def init_db():
     conn = get_conn()
