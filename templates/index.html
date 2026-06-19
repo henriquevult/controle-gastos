@@ -30,7 +30,6 @@
       min-height: 100vh;
     }
 
-    /* HEADER */
     header {
       border-bottom: 1px solid var(--border);
       padding: 0 24px;
@@ -56,27 +55,15 @@
     }
 
     .logo svg { color: var(--accent); }
+    .header-sep { color: var(--border); font-size: 18px; margin: 0 4px; }
+    .repo-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent); }
 
-    .header-sep {
-      color: var(--border);
-      font-size: 18px;
-      margin: 0 4px;
-    }
-
-    .repo-name {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px;
-      color: var(--accent);
-    }
-
-    /* MAIN LAYOUT */
     main {
       max-width: 960px;
       margin: 0 auto;
       padding: 32px 24px;
     }
 
-    /* STATS ROW */
     .stats-row {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -94,11 +81,7 @@
       transition: opacity 0.3s ease, transform 0.3s ease, border-color 0.2s;
     }
 
-    .stat-card.visible {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
+    .stat-card.visible { opacity: 1; transform: translateY(0); }
     .stat-card:hover { border-color: var(--accent); }
 
     .stat-label {
@@ -119,14 +102,13 @@
     .stat-value.green { color: var(--green); }
     .stat-value.blue  { color: var(--accent); }
 
-    /* UPLOAD AREA */
     .upload-area {
       background: var(--surface);
       border: 1px dashed var(--border);
       border-radius: 6px;
       padding: 24px;
       text-align: center;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       transition: border-color 0.2s, background 0.2s;
       cursor: pointer;
     }
@@ -137,23 +119,56 @@
     }
 
     .upload-area input[type=file] { display: none; }
-
     .upload-icon { font-size: 24px; margin-bottom: 8px; }
 
-    .upload-label {
-      color: var(--muted);
-      font-size: 13px;
+    .upload-label { color: var(--muted); font-size: 13px; }
+    .upload-label span { color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+    .arquivo-selecionado {
+      display: none;
+      align-items: center;
+      gap: 8px;
+      background: rgba(56,139,253,0.08);
+      border: 1px solid var(--accent);
+      border-radius: 6px;
+      padding: 8px 12px;
+      margin-top: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--accent);
     }
 
-    .upload-label span {
-      color: var(--accent);
+    .arquivo-selecionado.visivel { display: flex; }
+
+    .arquivo-nome {
+      flex: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: left;
+    }
+
+    .arquivo-remover {
       cursor: pointer;
-      text-decoration: underline;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1;
+      background: none;
+      border: none;
+      color: var(--muted);
+      padding: 0 4px;
+    }
+
+    .arquivo-remover:hover { color: var(--red); }
+
+    .btn-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      justify-content: center;
     }
 
     .btn {
-      background: var(--accent);
-      color: #fff;
       border: none;
       border-radius: 6px;
       padding: 8px 16px;
@@ -161,13 +176,22 @@
       font-family: 'Inter', sans-serif;
       font-weight: 500;
       cursor: pointer;
-      margin-top: 12px;
       transition: opacity 0.2s, transform 0.1s;
     }
 
     .btn:hover { opacity: 0.85; }
     .btn:active { transform: scale(0.97); }
     .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--red);
+      border: 1px solid var(--red);
+    }
+
+    .btn-danger:hover { background: rgba(248,81,73,0.1); opacity: 1; }
 
     .toast {
       display: inline-block;
@@ -182,9 +206,8 @@
 
     .toast.show { opacity: 1; }
     .toast.ok  { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid var(--green); }
-    .toast.err { background: rgba(248,81,73,0.15);  color: var(--red);   border: 1px solid var(--red); }
+    .toast.err { background: rgba(248,81,73,0.15); color: var(--red);   border: 1px solid var(--red); }
 
-    /* TRANSACTION LIST */
     .section-header {
       display: flex;
       align-items: center;
@@ -228,27 +251,13 @@
       transition: opacity 0.25s ease, transform 0.25s ease, background 0.15s;
     }
 
-    .tx-item.visible {
-      opacity: 1;
-      transform: translateX(0);
-    }
-
+    .tx-item.visible { opacity: 1; transform: translateX(0); }
     .tx-item:last-child { border-bottom: none; }
     .tx-item:hover { background: rgba(56,139,253,0.04); }
 
-    .tx-desc {
-      font-size: 13px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
+    .tx-desc { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
-    .tx-meta {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-top: 3px;
-    }
+    .tx-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
 
     .tx-date {
       font-family: 'JetBrains Mono', monospace;
@@ -292,7 +301,6 @@
 
     .empty-icon { font-size: 32px; margin-bottom: 8px; }
 
-    /* SPINNER */
     .spinner {
       width: 16px; height: 16px;
       border: 2px solid var(--border);
@@ -336,7 +344,7 @@
 
 <main>
 
-  <div class="stats-row" id="stats-row">
+  <div class="stats-row">
     <div class="stat-card" id="card-total">
       <div class="stat-label">Total gasto</div>
       <div class="stat-value red" id="val-total">—</div>
@@ -352,25 +360,38 @@
   </div>
 
   <div class="upload-area" id="drop-zone" onclick="document.getElementById('ofx').click()">
-<input type="file" id="ofx" accept=".ofx,.pdf,.png,.jpg,.jpeg,.webp,.bmp">    <div class="upload-icon">📂</div>
+    <input type="file" id="ofx" accept=".ofx,.pdf">
+    <div class="upload-icon">📂</div>
     <div class="upload-label">
-      Arraste um arquivo <strong>.ofx</strong> ou <span>escolha do computador</span>
+      Arraste um arquivo <strong>.ofx</strong> ou <strong>.pdf</strong> ou <span>escolha do computador</span>
     </div>
-    <button class="btn" id="btn-upload" onclick="event.stopPropagation(); enviar()" disabled>
-      Importar extrato
-    </button>
+    <div class="arquivo-selecionado" id="arquivo-selecionado">
+      <span>📄</span>
+      <span class="arquivo-nome" id="arquivo-nome"></span>
+      <button class="arquivo-remover" onclick="event.stopPropagation(); limparArquivo()" title="Remover">✕</button>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-upload" onclick="event.stopPropagation(); enviar()" disabled>
+        Importar extrato
+      </button>
+    </div>
     <div><span class="toast" id="toast"></span></div>
   </div>
 
   <div class="section-header">
     <span class="section-title">Transações</span>
-    <span class="tx-count" id="tx-count">0</span>
+    <div style="display:flex;gap:8px;align-items:center">
+      <span class="tx-count" id="tx-count">0</span>
+      <button class="btn btn-danger" onclick="zerar()" id="btn-zerar" style="padding:4px 10px;font-size:12px">
+        Zerar tudo
+      </button>
+    </div>
   </div>
 
   <div class="tx-list" id="lista">
     <div class="empty">
       <div class="empty-icon">🪙</div>
-      Nenhuma transação ainda.<br>Importe um extrato .ofx do Santander para começar.
+      Nenhuma transação ainda.<br>Importe um extrato .ofx ou .pdf do Santander para começar.
     </div>
   </div>
 
@@ -381,10 +402,24 @@
   const btnUpload = document.getElementById("btn-upload");
   const dropZone  = document.getElementById("drop-zone");
   const toast     = document.getElementById("toast");
+  const arquivoEl = document.getElementById("arquivo-selecionado");
+  const nomeEl    = document.getElementById("arquivo-nome");
 
   ofxInput.addEventListener("change", () => {
-    btnUpload.disabled = !ofxInput.files.length;
+    if (ofxInput.files.length) mostrarArquivo(ofxInput.files[0].name);
   });
+
+  function mostrarArquivo(nome) {
+    nomeEl.textContent = nome;
+    arquivoEl.classList.add("visivel");
+    btnUpload.disabled = false;
+  }
+
+  function limparArquivo() {
+    ofxInput.value = "";
+    arquivoEl.classList.remove("visivel");
+    btnUpload.disabled = true;
+  }
 
   dropZone.addEventListener("dragover", e => {
     e.preventDefault();
@@ -401,7 +436,7 @@
       const dt = new DataTransfer();
       dt.items.add(file);
       ofxInput.files = dt.files;
-      btnUpload.disabled = false;
+      mostrarArquivo(file.name);
     }
   });
 
@@ -414,17 +449,15 @@
   async function enviar() {
     const arquivo = ofxInput.files[0];
     if (!arquivo) return;
-
     btnUpload.disabled = true;
     btnUpload.innerHTML = '<span class="spinner"></span>Importando…';
-
     const form = new FormData();
     form.append("ofx", arquivo);
-
     try {
       const r = await fetch("/upload", { method: "POST", body: form });
       const d = await r.json();
       showToast(`✓ ${d.inseridas} transações importadas`, "ok");
+      limparArquivo();
       await carregar();
     } catch {
       showToast("Erro ao importar. Tente novamente.", "err");
@@ -434,13 +467,20 @@
     }
   }
 
+  async function zerar() {
+    if (!confirm("Tem certeza? Isso apaga todas as transações.")) return;
+    await fetch("/zerar", { method: "POST" });
+    showToast("Dados apagados.", "ok");
+    await carregar();
+  }
+
   function fmt(val) {
     return "R$ " + Math.abs(val).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
   }
 
   async function carregar() {
-    const r    = await fetch("/api/transacoes");
-    const txs  = await r.json();
+    const r   = await fetch("/api/transacoes");
+    const txs = await r.json();
     const lista = document.getElementById("lista");
 
     document.getElementById("tx-count").textContent = txs.length;
@@ -452,7 +492,6 @@
     document.getElementById("val-entradas").textContent = fmt(entradas);
     document.getElementById("val-qtd").textContent      = txs.length;
 
-    // Animação dos cards
     document.querySelectorAll(".stat-card").forEach((c, i) => {
       setTimeout(() => c.classList.add("visible"), i * 80);
     });
@@ -461,7 +500,7 @@
       lista.innerHTML = `
         <div class="empty">
           <div class="empty-icon">🪙</div>
-          Nenhuma transação ainda.<br>Importe um extrato .ofx do Santander para começar.
+          Nenhuma transação ainda.<br>Importe um extrato .ofx ou .pdf do Santander para começar.
         </div>`;
       return;
     }
@@ -479,7 +518,6 @@
       </div>
     `).join("");
 
-    // Animação escalonada dos itens
     document.querySelectorAll(".tx-item").forEach((el, i) => {
       setTimeout(() => el.classList.add("visible"), i * 30);
     });
