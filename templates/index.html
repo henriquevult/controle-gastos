@@ -4,50 +4,489 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Gastos</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    body { font-family: sans-serif; max-width: 600px; margin: auto; padding: 1rem; }
-    .tx { border-bottom: 1px solid #eee; padding: 0.5rem 0; }
-    .negativo { color: #e74c3c; }
-    .positivo { color: #27ae60; }
-    input[type=file], button { margin: 0.5rem 0; padding: 0.5rem 1rem; }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0d1117;
+      --surface:   #161b22;
+      --border:    #30363d;
+      --muted:     #8b949e;
+      --text:      #e6edf3;
+      --accent:    #388bfd;
+      --accent-glow: rgba(56,139,253,0.15);
+      --green:     #3fb950;
+      --red:       #f85149;
+      --purple:    #bc8cff;
+      --yellow:    #d29922;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* HEADER */
+    header {
+      border-bottom: 1px solid var(--border);
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      background: rgba(13,17,23,0.85);
+      backdrop-filter: blur(12px);
+      z-index: 100;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text);
+    }
+
+    .logo svg { color: var(--accent); }
+
+    .header-sep {
+      color: var(--border);
+      font-size: 18px;
+      margin: 0 4px;
+    }
+
+    .repo-name {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      color: var(--accent);
+    }
+
+    /* MAIN LAYOUT */
+    main {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 24px;
+    }
+
+    /* STATS ROW */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 16px;
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s ease, transform 0.3s ease, border-color 0.2s;
+    }
+
+    .stat-card.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .stat-card:hover { border-color: var(--accent); }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+    }
+
+    .stat-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 22px;
+      font-weight: 500;
+    }
+
+    .stat-value.red   { color: var(--red); }
+    .stat-value.green { color: var(--green); }
+    .stat-value.blue  { color: var(--accent); }
+
+    /* UPLOAD AREA */
+    .upload-area {
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 6px;
+      padding: 24px;
+      text-align: center;
+      margin-bottom: 24px;
+      transition: border-color 0.2s, background 0.2s;
+      cursor: pointer;
+    }
+
+    .upload-area:hover, .upload-area.drag-over {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .upload-area input[type=file] { display: none; }
+
+    .upload-icon { font-size: 24px; margin-bottom: 8px; }
+
+    .upload-label {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .upload-label span {
+      color: var(--accent);
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    .btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: opacity 0.2s, transform 0.1s;
+    }
+
+    .btn:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .toast {
+      display: inline-block;
+      margin-top: 10px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .toast.show { opacity: 1; }
+    .toast.ok  { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid var(--green); }
+    .toast.err { background: rgba(248,81,73,0.15);  color: var(--red);   border: 1px solid var(--red); }
+
+    /* TRANSACTION LIST */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+
+    .section-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .tx-count {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      background: var(--border);
+      color: var(--muted);
+      padding: 2px 8px;
+      border-radius: 10px;
+    }
+
+    .tx-list {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .tx-item {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      align-items: center;
+      gap: 16px;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border);
+      opacity: 0;
+      transform: translateX(-6px);
+      transition: opacity 0.25s ease, transform 0.25s ease, background 0.15s;
+    }
+
+    .tx-item.visible {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .tx-item:last-child { border-bottom: none; }
+    .tx-item:hover { background: rgba(56,139,253,0.04); }
+
+    .tx-desc {
+      font-size: 13px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .tx-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 3px;
+    }
+
+    .tx-date {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 1px 7px;
+      border-radius: 10px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .badge-mercado     { background: rgba(63,185,80,0.15);   color: var(--green); }
+    .badge-transporte  { background: rgba(210,153,34,0.15);  color: var(--yellow); }
+    .badge-alimentacao { background: rgba(188,140,255,0.15); color: var(--purple); }
+    .badge-saude       { background: rgba(56,139,253,0.15);  color: var(--accent); }
+    .badge-lazer       { background: rgba(248,81,73,0.15);   color: var(--red); }
+    .badge-outros      { background: rgba(139,148,158,0.15); color: var(--muted); }
+
+    .tx-valor {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      font-weight: 500;
+      white-space: nowrap;
+      text-align: right;
+    }
+
+    .tx-valor.neg { color: var(--red); }
+    .tx-valor.pos { color: var(--green); }
+
+    .empty {
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .empty-icon { font-size: 32px; margin-bottom: 8px; }
+
+    /* SPINNER */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.6s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+      margin-right: 6px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    @media (max-width: 600px) {
+      .stats-row { grid-template-columns: 1fr; }
+      .tx-item { grid-template-columns: 1fr auto; }
+      .tx-meta { display: none; }
+    }
   </style>
 </head>
 <body>
-  <h1>Controle de Gastos</h1>
 
-  <input type="file" id="ofx" accept=".ofx">
-  <button onclick="enviar()">Importar extrato</button>
-  <p id="msg"></p>
+<header>
+  <div class="logo">
+    <svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor">
+      <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
+               0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13
+               -.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66
+               .07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95
+               0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12
+               0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27
+               1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15
+               0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48
+               0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
+    </svg>
+    gastos
+  </div>
+  <span class="header-sep">/</span>
+  <span class="repo-name">controle-financeiro</span>
+</header>
 
-  <div id="lista"></div>
+<main>
 
-  <script>
-    async function enviar() {
-      const arquivo = document.getElementById("ofx").files[0];
-      if (!arquivo) return;
-      const form = new FormData();
-      form.append("ofx", arquivo);
+  <div class="stats-row" id="stats-row">
+    <div class="stat-card" id="card-total">
+      <div class="stat-label">Total gasto</div>
+      <div class="stat-value red" id="val-total">—</div>
+    </div>
+    <div class="stat-card" id="card-entradas">
+      <div class="stat-label">Entradas</div>
+      <div class="stat-value green" id="val-entradas">—</div>
+    </div>
+    <div class="stat-card" id="card-qtd">
+      <div class="stat-label">Transações</div>
+      <div class="stat-value blue" id="val-qtd">—</div>
+    </div>
+  </div>
+
+  <div class="upload-area" id="drop-zone" onclick="document.getElementById('ofx').click()">
+    <input type="file" id="ofx" accept=".ofx">
+    <div class="upload-icon">📂</div>
+    <div class="upload-label">
+      Arraste um arquivo <strong>.ofx</strong> ou <span>escolha do computador</span>
+    </div>
+    <button class="btn" id="btn-upload" onclick="event.stopPropagation(); enviar()" disabled>
+      Importar extrato
+    </button>
+    <div><span class="toast" id="toast"></span></div>
+  </div>
+
+  <div class="section-header">
+    <span class="section-title">Transações</span>
+    <span class="tx-count" id="tx-count">0</span>
+  </div>
+
+  <div class="tx-list" id="lista">
+    <div class="empty">
+      <div class="empty-icon">🪙</div>
+      Nenhuma transação ainda.<br>Importe um extrato .ofx do Santander para começar.
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const ofxInput  = document.getElementById("ofx");
+  const btnUpload = document.getElementById("btn-upload");
+  const dropZone  = document.getElementById("drop-zone");
+  const toast     = document.getElementById("toast");
+
+  ofxInput.addEventListener("change", () => {
+    btnUpload.disabled = !ofxInput.files.length;
+  });
+
+  dropZone.addEventListener("dragover", e => {
+    e.preventDefault();
+    dropZone.classList.add("drag-over");
+  });
+
+  dropZone.addEventListener("dragleave", () => dropZone.classList.remove("drag-over"));
+
+  dropZone.addEventListener("drop", e => {
+    e.preventDefault();
+    dropZone.classList.remove("drag-over");
+    const file = e.dataTransfer.files[0];
+    if (file) {
+      const dt = new DataTransfer();
+      dt.items.add(file);
+      ofxInput.files = dt.files;
+      btnUpload.disabled = false;
+    }
+  });
+
+  function showToast(msg, type) {
+    toast.textContent = msg;
+    toast.className = `toast ${type} show`;
+    setTimeout(() => toast.classList.remove("show"), 3000);
+  }
+
+  async function enviar() {
+    const arquivo = ofxInput.files[0];
+    if (!arquivo) return;
+
+    btnUpload.disabled = true;
+    btnUpload.innerHTML = '<span class="spinner"></span>Importando…';
+
+    const form = new FormData();
+    form.append("ofx", arquivo);
+
+    try {
       const r = await fetch("/upload", { method: "POST", body: form });
       const d = await r.json();
-      document.getElementById("msg").textContent = `${d.inseridas} transações importadas`;
-      carregar();
+      showToast(`✓ ${d.inseridas} transações importadas`, "ok");
+      await carregar();
+    } catch {
+      showToast("Erro ao importar. Tente novamente.", "err");
+    } finally {
+      btnUpload.disabled = false;
+      btnUpload.textContent = "Importar extrato";
+    }
+  }
+
+  function fmt(val) {
+    return "R$ " + Math.abs(val).toLocaleString("pt-BR", { minimumFractionDigits: 2 });
+  }
+
+  async function carregar() {
+    const r    = await fetch("/api/transacoes");
+    const txs  = await r.json();
+    const lista = document.getElementById("lista");
+
+    document.getElementById("tx-count").textContent = txs.length;
+
+    const saidas   = txs.filter(t => t.valor < 0).reduce((s, t) => s + Math.abs(t.valor), 0);
+    const entradas = txs.filter(t => t.valor > 0).reduce((s, t) => s + t.valor, 0);
+
+    document.getElementById("val-total").textContent    = fmt(saidas);
+    document.getElementById("val-entradas").textContent = fmt(entradas);
+    document.getElementById("val-qtd").textContent      = txs.length;
+
+    // Animação dos cards
+    document.querySelectorAll(".stat-card").forEach((c, i) => {
+      setTimeout(() => c.classList.add("visible"), i * 80);
+    });
+
+    if (!txs.length) {
+      lista.innerHTML = `
+        <div class="empty">
+          <div class="empty-icon">🪙</div>
+          Nenhuma transação ainda.<br>Importe um extrato .ofx do Santander para começar.
+        </div>`;
+      return;
     }
 
-    async function carregar() {
-      const r = await fetch("/api/transacoes");
-      const txs = await r.json();
-      document.getElementById("lista").innerHTML = txs.map(tx => `
-        <div class="tx">
-          <div>${tx.descricao}</div>
-          <div>${tx.data} — <small>${tx.categoria}</small></div>
-          <div class="${tx.valor < 0 ? 'negativo' : 'positivo'}">
-            R$ ${Math.abs(tx.valor).toFixed(2)}
+    lista.innerHTML = txs.map((tx, i) => `
+      <div class="tx-item" data-i="${i}">
+        <div>
+          <div class="tx-desc">${tx.descricao}</div>
+          <div class="tx-meta">
+            <span class="tx-date">${tx.data}</span>
+            <span class="badge badge-${tx.categoria}">${tx.categoria}</span>
           </div>
         </div>
-      `).join("");
-    }
+        <div class="tx-valor ${tx.valor < 0 ? 'neg' : 'pos'}">${fmt(tx.valor)}</div>
+      </div>
+    `).join("");
 
-    carregar();
-  </script>
+    // Animação escalonada dos itens
+    document.querySelectorAll(".tx-item").forEach((el, i) => {
+      setTimeout(() => el.classList.add("visible"), i * 30);
+    });
+  }
+
+  carregar();
+</script>
 </body>
 </html>
