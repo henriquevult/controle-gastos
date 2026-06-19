@@ -1,10 +1,8 @@
 from flask import Flask, render_template, request, jsonify
-from openai import OpenAI
-import os, re, json, base64
+import os, re, json
 import psycopg2
+import fitz
 from urllib.parse import urlparse
-from PIL import Image
-import io
 
 app = Flask(__name__)
 
@@ -43,40 +41,51 @@ def init_db():
     conn.commit()
     conn.close()
 
-PROMPT = """Extraia todas as transações deste extrato bancário.
-Retorne APENAS um JSON válido, sem texto antes ou depois, no formato:
-[{"id":"unico","data":"YYYY-MM-DD","memo":"descricao","valor":-100.00}]
-Valores negativos para débitos, positivos para créditos.
-Se não houver ID, gere um baseado em data+descrição."""
-
-def chamar_gpt(content):
-    client = OpenAI(api_key=os.environ["OPENAI_API_KEY"])
-    msg = client.chat.completions.create(
-        model="gpt-4o",
-        max_tokens=4096,
-        messages=[{"role": "user", "content": content}]
-    )
-    texto = msg.choices[0].message.content.strip().replace("```json","").replace("```","").strip()
-    return json.loads(texto)
-
 def extrair_pdf(arquivo_bytes):
-    pdf_b64 = base64.standard_b64encode(arquivo_bytes).decode("utf-8")
-    return chamar_gpt([
-        {"type": "text", "text": PROMPT},
-        {"type": "image_url", "image_url": {"url": f"data:application/pdf;base64,{pdf_b64}"}}
-    ])
+    doc = fitz.open(stream=arquivo_bytes, filetype="pdf")
+    texto = ""
+    for pagina in doc:
+        texto += pagina.get_text()
 
-def extrair_imagem(arquivo_bytes, media_type):
-    img = Image.open(io.BytesIO(arquivo_bytes))
-    if img.mode != "RGB":
-        img = img.convert("RGB")
-    buf = io.BytesIO()
-    img.save(buf, format="JPEG", quality=90)
-    img_b64 = base64.standard_b64encode(buf.getvalue()).decode("utf-8")
-    return chamar_gpt([
-        {"type": "text", "text": PROMPT},
-        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{img_b64}"}}
-    ])
+    transacoes = []
+    linhas = texto.splitlines()
+
+    for i, linha in enumerate(linhas):
+        # Tenta encontrar padrão: data DD/MM/AAAA seguida de descrição e valor
+        match_data = re.search(r'(\d{2}/\d{2}/\d{4})', linha)
+        if not match_data:
+            continue
+
+        data_raw = match_data.group(1)
+        data = f"{data_raw[6:]}-{data_raw[3:5]}-{data_raw[0:2]}"
+
+        # Pega o restante da linha como descrição
+        resto = linha[match_data.end():].strip()
+
+        # Procura valor no padrão brasileiro: 1.234,56 ou -1.234,56
+        match_valor = re.search(r'(-?\d{1,3}(?:\.\d{3})*,\d{2})', resto)
+        if not match_valor:
+            # Tenta na próxima linha
+            if i + 1 < len(linhas):
+                match_valor = re.search(r'(-?\d{1,3}(?:\.\d{3})*,\d{2})', linhas[i+1])
+
+        if not match_valor:
+            continue
+
+        valor_raw = match_valor.group(1).replace(".", "").replace(",", ".")
+        valor = float(valor_raw)
+
+        memo = resto.replace(match_valor.group(1), "").strip() or f"transacao_{data}"
+        tid = re.sub(r'\W+', '', f"{data}{memo}")[:50]
+
+        transacoes.append({
+            "id": tid,
+            "data": data,
+            "memo": memo or "Sem descrição",
+            "valor": valor
+        })
+
+    return transacoes
 
 def salvar(cur, transacoes):
     inseridas = 0
@@ -106,10 +115,6 @@ def upload():
 
     if nome.endswith(".pdf"):
         inseridas = salvar(cur, extrair_pdf(conteudo_bytes))
-
-    elif nome.endswith((".png", ".jpg", ".jpeg", ".webp", ".bmp")):
-        media_type = "image/png" if nome.endswith(".png") else "image/jpeg"
-        inseridas = salvar(cur, extrair_imagem(conteudo_bytes, media_type))
 
     else:
         conteudo = conteudo_bytes.decode("latin-1", errors="ignore")
