@@ -27,6 +27,14 @@ def get_conn():
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     return psycopg2.connect(db_url)
 
+@app.route("/zerar", methods=["POST"])
+def zerar():
+    conn = get_conn()
+    conn.cursor().execute("DELETE FROM transacoes")
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True})
+
 def init_db():
     conn = get_conn()
     conn.cursor().execute("""
