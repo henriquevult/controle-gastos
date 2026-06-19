@@ -19,9 +19,23 @@ def categorizar(descricao):
             return categoria
     return "outros"
 
+import os
+import psycopg2
+from urllib.parse import urlparse
+
+def get_conn():
+    url = urlparse(os.environ["DATABASE_URL"])
+    return psycopg2.connect(
+        dbname=url.path[1:],
+        user=url.username,
+        password=url.password,
+        host=url.hostname,
+        port=url.port
+    )
+
 def init_db():
-    conn = sqlite3.connect("gastos.db")
-    conn.execute("""
+    conn = get_conn()
+    conn.cursor().execute("""
         CREATE TABLE IF NOT EXISTS transacoes (
             id TEXT PRIMARY KEY,
             data TEXT,
@@ -33,22 +47,18 @@ def init_db():
     conn.commit()
     conn.close()
 
-@app.route("/")
-def index():
-    return render_template("index.html")
-
 @app.route("/upload", methods=["POST"])
 def upload():
     arquivo = request.files["ofx"]
     ofx = OfxParser.parse(io.BytesIO(arquivo.read()))
-    conn = sqlite3.connect("gastos.db")
+    conn = get_conn()
+    cur = conn.cursor()
     inseridas = 0
-    for conta in ofx.account.statement.transactions:
+    for t in ofx.account.statement.transactions:
         try:
-            conn.execute(
-                "INSERT OR IGNORE INTO transacoes VALUES (?,?,?,?,?)",
-                (conta.id, str(conta.date.date()), conta.memo,
-                 float(conta.amount), categorizar(conta.memo))
+            cur.execute(
+                "INSERT INTO transacoes VALUES (%s,%s,%s,%s,%s) ON CONFLICT DO NOTHING",
+                (t.id, str(t.date.date()), t.memo, float(t.amount), categorizar(t.memo))
             )
             inseridas += 1
         except:
@@ -59,17 +69,12 @@ def upload():
 
 @app.route("/api/transacoes")
 def transacoes():
-    conn = sqlite3.connect("gastos.db")
-    rows = conn.execute(
-        "SELECT data, descricao, valor, categoria FROM transacoes ORDER BY data DESC"
-    ).fetchall()
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT data, descricao, valor, categoria FROM transacoes ORDER BY data DESC")
+    rows = cur.fetchall()
     conn.close()
     return jsonify([
         {"data": r[0], "descricao": r[1], "valor": r[2], "categoria": r[3]}
         for r in rows
     ])
-
-init_db()
-
-if __name__ == "__main__":
-    app.run(debug=True)
