@@ -7,110 +7,86 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     :root {
       --bg: #0d1117; --surface: #161b22; --border: #30363d;
       --muted: #8b949e; --text: #e6edf3; --accent: #388bfd;
       --accent-glow: rgba(56,139,253,0.15); --green: #3fb950;
       --red: #f85149; --purple: #bc8cff; --yellow: #d29922;
     }
-
     body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-size: 14px; min-height: 100vh; }
 
     header {
-      border-bottom: 1px solid var(--border);
-      padding: 0 24px; height: 56px;
+      border-bottom: 1px solid var(--border); padding: 0 24px; height: 56px;
       display: flex; align-items: center; gap: 12px;
-      position: sticky; top: 0;
-      background: rgba(13,17,23,0.85);
+      position: sticky; top: 0; background: rgba(13,17,23,0.85);
       backdrop-filter: blur(12px); z-index: 100;
     }
-
     .logo { display: flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; }
     .logo svg { color: var(--accent); }
     .header-sep { color: var(--border); font-size: 18px; margin: 0 4px; }
     .repo-name { font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--accent); }
     .header-spacer { flex: 1; }
+    .header-actions { display: flex; gap: 8px; align-items: center; }
 
-    .mode-toggle {
-      display: flex; gap: 4px;
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 6px; padding: 3px;
-    }
-
-    .mode-btn {
-      background: none; border: none; color: var(--muted);
-      padding: 4px 10px; border-radius: 4px; cursor: pointer;
-      font-size: 12px; font-family: 'Inter', sans-serif;
-      transition: all 0.2s;
-    }
-
+    .mode-toggle { display: flex; gap: 4px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 3px; }
+    .mode-btn { background: none; border: none; color: var(--muted); padding: 4px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; font-family: 'Inter', sans-serif; transition: all 0.2s; }
     .mode-btn.active { background: var(--accent); color: #fff; }
+
+    .nav-btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); padding: 5px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-family: 'Inter', sans-serif; transition: all 0.2s; }
+    .nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .nav-btn.active { border-color: var(--accent); color: var(--accent); background: var(--accent-glow); }
 
     main { max-width: 1200px; margin: 0 auto; padding: 24px; }
 
-    /* MONTH FILTER */
-    .month-bar {
-      display: flex; gap: 6px; margin-bottom: 24px;
-      flex-wrap: wrap; align-items: center;
-    }
+    /* PAGES */
+    .page { display: none; }
+    .page.active { display: block; }
 
+    /* UPLOAD */
+    .upload-area {
+      background: var(--surface); border: 1px dashed var(--border);
+      border-radius: 6px; padding: 20px; text-align: center; margin-bottom: 20px;
+      cursor: pointer; transition: border-color 0.2s, background 0.2s;
+    }
+    .upload-area:hover, .upload-area.drag-over { border-color: var(--accent); background: var(--accent-glow); }
+    .upload-area input[type=file] { display: none; }
+    .upload-label { color: var(--muted); font-size: 13px; }
+    .upload-label span { color: var(--accent); cursor: pointer; text-decoration: underline; }
+    .arquivo-selecionado { display: none; align-items: center; gap: 8px; background: rgba(56,139,253,0.08); border: 1px solid var(--accent); border-radius: 6px; padding: 6px 10px; margin-top: 10px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); }
+    .arquivo-selecionado.visivel { display: flex; }
+    .arquivo-nome { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
+    .arquivo-remover { cursor: pointer; background: none; border: none; color: var(--muted); padding: 0 4px; font-size: 14px; }
+    .arquivo-remover:hover { color: var(--red); }
+    .btn-row { display: flex; gap: 8px; margin-top: 10px; justify-content: center; }
+
+    .btn { border: none; border-radius: 6px; padding: 7px 14px; font-size: 13px; font-family: 'Inter', sans-serif; font-weight: 500; cursor: pointer; transition: opacity 0.2s, transform 0.1s; }
+    .btn:hover { opacity: 0.85; }
+    .btn:active { transform: scale(0.97); }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
+    .btn-danger:hover { background: rgba(248,81,73,0.1); opacity: 1; }
+    .btn-ghost { background: transparent; color: var(--muted); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--text); color: var(--text); opacity: 1; }
+
+    .toast { display: inline-block; margin-top: 8px; padding: 5px 10px; border-radius: 6px; font-size: 12px; font-family: 'JetBrains Mono', monospace; opacity: 0; transition: opacity 0.3s; }
+    .toast.show { opacity: 1; }
+    .toast.ok  { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid var(--green); }
+    .toast.err { background: rgba(248,81,73,0.15); color: var(--red);   border: 1px solid var(--red); }
+
+    /* MONTH BAR */
+    .month-bar { display: flex; gap: 6px; margin-bottom: 24px; flex-wrap: wrap; align-items: center; }
     .month-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; }
-
-    .month-btn {
-      background: var(--surface); border: 1px solid var(--border);
-      color: var(--muted); border-radius: 6px; padding: 5px 10px;
-      font-size: 12px; font-family: 'JetBrains Mono', monospace;
-      cursor: pointer; transition: all 0.2s; position: relative;
-    }
-
+    .month-btn { background: var(--surface); border: 1px solid var(--border); color: var(--muted); border-radius: 6px; padding: 5px 10px; font-size: 12px; font-family: 'JetBrains Mono', monospace; cursor: pointer; transition: all 0.2s; position: relative; }
     .month-btn.has-data { color: var(--text); border-color: #444d56; }
     .month-btn.selected { background: var(--accent); border-color: var(--accent); color: #fff; }
     .month-btn.selected-b { background: var(--purple); border-color: var(--purple); color: #fff; }
-
-    .month-btn .dot {
-      position: absolute; top: -3px; right: -3px;
-      width: 6px; height: 6px; border-radius: 50%;
-      background: var(--green); display: none;
-    }
-
+    .month-btn .dot { position: absolute; top: -3px; right: -3px; width: 6px; height: 6px; border-radius: 50%; background: var(--green); display: none; }
     .month-btn.has-data .dot { display: block; }
-
-    /* COMPARE MODE */
-    .compare-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 16px;
-    }
-
-    .compare-panel {
-      opacity: 0; transform: translateY(10px);
-      transition: opacity 0.35s ease, transform 0.35s ease;
-    }
-
-    .compare-panel.visible { opacity: 1; transform: translateY(0); }
-
-    .panel-header {
-      display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 12px;
-    }
-
-    .panel-title {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 13px; font-weight: 500;
-    }
-
-    .panel-title.a { color: var(--accent); }
-    .panel-title.b { color: var(--purple); }
 
     /* STATS */
     .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; }
-
-    .stat-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: 6px; padding: 12px;
-      opacity: 0; transform: translateY(8px);
-      transition: opacity 0.3s ease, transform 0.3s ease, border-color 0.2s;
-    }
-
+    .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 12px; opacity: 0; transform: translateY(8px); transition: opacity 0.3s ease, transform 0.3s ease, border-color 0.2s; }
     .stat-card.visible { opacity: 1; transform: translateY(0); }
     .stat-card:hover { border-color: var(--accent); }
     .stat-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 6px; }
@@ -118,99 +94,53 @@
     .stat-value.red { color: var(--red); }
     .stat-value.green { color: var(--green); }
     .stat-value.blue { color: var(--accent); }
-
-    /* DELTA badges */
-    .delta {
-      font-size: 10px; font-family: 'JetBrains Mono', monospace;
-      margin-top: 4px; display: none;
-    }
+    .delta { font-size: 10px; font-family: 'JetBrains Mono', monospace; margin-top: 4px; }
     .delta.up { color: var(--red); }
     .delta.down { color: var(--green); }
 
-    /* UPLOAD */
-    .upload-area {
-      background: var(--surface); border: 1px dashed var(--border);
-      border-radius: 6px; padding: 20px; text-align: center;
-      margin-bottom: 20px; cursor: pointer;
-      transition: border-color 0.2s, background 0.2s;
-    }
-
-    .upload-area:hover, .upload-area.drag-over { border-color: var(--accent); background: var(--accent-glow); }
-    .upload-area input[type=file] { display: none; }
-    .upload-label { color: var(--muted); font-size: 13px; }
-    .upload-label span { color: var(--accent); cursor: pointer; text-decoration: underline; }
-
-    .arquivo-selecionado {
-      display: none; align-items: center; gap: 8px;
-      background: rgba(56,139,253,0.08); border: 1px solid var(--accent);
-      border-radius: 6px; padding: 6px 10px; margin-top: 10px;
-      font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent);
-    }
-
-    .arquivo-selecionado.visivel { display: flex; }
-    .arquivo-nome { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: left; }
-    .arquivo-remover { cursor: pointer; background: none; border: none; color: var(--muted); padding: 0 4px; font-size: 14px; }
-    .arquivo-remover:hover { color: var(--red); }
-
-    .btn-row { display: flex; gap: 8px; margin-top: 10px; justify-content: center; }
-
-    .btn {
-      border: none; border-radius: 6px; padding: 7px 14px;
-      font-size: 13px; font-family: 'Inter', sans-serif; font-weight: 500;
-      cursor: pointer; transition: opacity 0.2s, transform 0.1s;
-    }
-
-    .btn:hover { opacity: 0.85; }
-    .btn:active { transform: scale(0.97); }
-    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
-    .btn-primary { background: var(--accent); color: #fff; }
-    .btn-danger { background: transparent; color: var(--red); border: 1px solid var(--red); }
-    .btn-danger:hover { background: rgba(248,81,73,0.1); opacity: 1; }
-
-    .toast {
-      display: inline-block; margin-top: 8px; padding: 5px 10px;
-      border-radius: 6px; font-size: 12px; font-family: 'JetBrains Mono', monospace;
-      opacity: 0; transition: opacity 0.3s;
-    }
-
-    .toast.show { opacity: 1; }
-    .toast.ok  { background: rgba(63,185,80,0.15); color: var(--green); border: 1px solid var(--green); }
-    .toast.err { background: rgba(248,81,73,0.15); color: var(--red);   border: 1px solid var(--red); }
+    /* COMPARE */
+    .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .compare-panel { opacity: 0; transform: translateY(10px); transition: opacity 0.35s ease, transform 0.35s ease; }
+    .compare-panel.visible { opacity: 1; transform: translateY(0); }
+    .panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+    .panel-title { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; }
+    .panel-title.a { color: var(--accent); }
+    .panel-title.b { color: var(--purple); }
 
     /* TX LIST */
     .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
     .section-title { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
     .tx-count { font-family: 'JetBrains Mono', monospace; font-size: 11px; background: var(--border); color: var(--muted); padding: 2px 8px; border-radius: 10px; }
-
     .tx-list { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; max-height: 520px; overflow-y: auto; }
-
     .tx-list::-webkit-scrollbar { width: 4px; }
-    .tx-list::-webkit-scrollbar-track { background: var(--surface); }
     .tx-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
     .tx-item {
-      display: grid; grid-template-columns: 1fr auto;
-      align-items: center; gap: 12px; padding: 10px 14px;
-      border-bottom: 1px solid var(--border);
+      display: grid; grid-template-columns: 1fr auto; align-items: center;
+      gap: 12px; padding: 10px 14px; border-bottom: 1px solid var(--border);
       opacity: 0; transform: translateX(-6px);
       transition: opacity 0.2s ease, transform 0.2s ease, background 0.15s;
+      cursor: pointer;
     }
-
     .tx-item.visible { opacity: 1; transform: translateX(0); }
     .tx-item:last-child { border-bottom: none; }
-    .tx-item:hover { background: rgba(56,139,253,0.04); }
+    .tx-item:hover { background: rgba(56,139,253,0.06); }
+    .tx-item:hover .tx-edit-hint { opacity: 1; }
 
     .tx-desc { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .tx-meta { display: flex; align-items: center; gap: 6px; margin-top: 2px; }
     .tx-date { font-family: 'JetBrains Mono', monospace; font-size: 11px; color: var(--muted); }
+    .tx-edit-hint { font-size: 10px; color: var(--accent); opacity: 0; transition: opacity 0.2s; }
 
-    .badge { font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; }
+    .badge { font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.04em; cursor: pointer; transition: opacity 0.2s; }
+    .badge:hover { opacity: 0.75; }
     .badge-mercado     { background: rgba(63,185,80,0.15);   color: var(--green); }
     .badge-transporte  { background: rgba(210,153,34,0.15);  color: var(--yellow); }
     .badge-alimentacao { background: rgba(188,140,255,0.15); color: var(--purple); }
     .badge-saude       { background: rgba(56,139,253,0.15);  color: var(--accent); }
     .badge-lazer       { background: rgba(248,81,73,0.15);   color: var(--red); }
     .badge-outros      { background: rgba(139,148,158,0.15); color: var(--muted); }
+    .badge-custom      { background: rgba(56,139,253,0.15);  color: var(--accent); }
 
     .tx-valor { font-family: 'JetBrains Mono', monospace; font-size: 13px; font-weight: 500; white-space: nowrap; text-align: right; }
     .tx-valor.neg { color: var(--red); }
@@ -220,12 +150,72 @@
     .empty-icon { font-size: 28px; margin-bottom: 8px; }
 
     .spinner { width: 14px; height: 14px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.6s linear infinite; display: inline-block; vertical-align: middle; margin-right: 6px; }
-
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* MODAL */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; opacity: 0; pointer-events: none;
+      transition: opacity 0.2s;
+      backdrop-filter: blur(4px);
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 24px; width: 400px; max-width: 90vw;
+      transform: translateY(12px); transition: transform 0.2s;
+    }
+    .modal-overlay.open .modal { transform: translateY(0); }
+
+    .modal-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .modal-sub { font-size: 12px; color: var(--muted); margin-bottom: 16px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .cat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 16px; max-height: 240px; overflow-y: auto; }
+
+    .cat-option {
+      background: var(--bg); border: 1px solid var(--border);
+      border-radius: 6px; padding: 8px; cursor: pointer;
+      text-align: center; transition: all 0.15s;
+      font-size: 12px;
+    }
+    .cat-option:hover { border-color: var(--accent); background: var(--accent-glow); }
+    .cat-option.selected { border-color: var(--accent); background: var(--accent-glow); }
+    .cat-option .cat-icon { font-size: 18px; display: block; margin-bottom: 4px; }
+    .cat-option .cat-nome { font-size: 11px; color: var(--muted); }
+
+    .modal-footer { display: flex; gap: 8px; justify-content: flex-end; }
+
+    /* CATEGORIAS PAGE */
+    .cat-page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+    .cat-page-title { font-size: 16px; font-weight: 600; }
+
+    .cat-form { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; padding: 16px; margin-bottom: 20px; }
+    .cat-form-title { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px; }
+    .cat-form-row { display: grid; grid-template-columns: 1fr auto auto; gap: 8px; align-items: end; }
+
+    .input-group { display: flex; flex-direction: column; gap: 4px; }
+    .input-label { font-size: 11px; color: var(--muted); }
+    .input { background: var(--bg); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 10px; font-size: 13px; font-family: 'Inter', sans-serif; outline: none; transition: border-color 0.2s; }
+    .input:focus { border-color: var(--accent); }
+    .input-icon { width: 60px; text-align: center; font-size: 18px; }
+
+    .cat-list { background: var(--surface); border: 1px solid var(--border); border-radius: 6px; overflow: hidden; }
+    .cat-row { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); opacity: 0; transform: translateX(-6px); transition: opacity 0.2s, transform 0.2s, background 0.15s; }
+    .cat-row.visible { opacity: 1; transform: translateX(0); }
+    .cat-row:last-child { border-bottom: none; }
+    .cat-row:hover { background: rgba(56,139,253,0.04); }
+    .cat-row-icon { font-size: 20px; width: 32px; text-align: center; }
+    .cat-row-nome { flex: 1; font-size: 13px; font-weight: 500; }
+    .cat-row-cor { width: 12px; height: 12px; border-radius: 50%; }
+    .cat-row-del { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 16px; padding: 4px; border-radius: 4px; transition: color 0.2s; }
+    .cat-row-del:hover { color: var(--red); }
 
     @media (max-width: 768px) {
       .compare-grid { grid-template-columns: 1fr; }
       .stats-row { grid-template-columns: 1fr 1fr; }
+      .cat-form-row { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -241,88 +231,142 @@
   <span class="header-sep">/</span>
   <span class="repo-name">controle-financeiro</span>
   <div class="header-spacer"></div>
-  <div class="mode-toggle">
-    <button class="mode-btn active" onclick="setMode('single')" id="btn-single">Mês único</button>
-    <button class="mode-btn" onclick="setMode('compare')" id="btn-compare">Comparar</button>
+  <div class="header-actions">
+    <button class="nav-btn active" onclick="goPage('dashboard')" id="nav-dashboard">Dashboard</button>
+    <button class="nav-btn" onclick="goPage('categorias')" id="nav-categorias">Categorias</button>
+    <div class="mode-toggle" id="mode-toggle">
+      <button class="mode-btn active" onclick="setMode('single')" id="btn-single">Mês único</button>
+      <button class="mode-btn" onclick="setMode('compare')" id="btn-compare">Comparar</button>
+    </div>
   </div>
 </header>
 
 <main>
 
-  <!-- UPLOAD -->
-  <div class="upload-area" id="drop-zone" onclick="document.getElementById('ofx').click()">
-    <input type="file" id="ofx" accept=".ofx,.pdf">
-    <div class="upload-label">📂 Arraste <strong>.ofx</strong> ou <strong>.pdf</strong> ou <span>escolha do computador</span></div>
-    <div class="arquivo-selecionado" id="arquivo-selecionado">
-      <span>📄</span>
-      <span class="arquivo-nome" id="arquivo-nome"></span>
-      <button class="arquivo-remover" onclick="event.stopPropagation(); limparArquivo()" title="Remover">✕</button>
-    </div>
-    <div class="btn-row">
-      <button class="btn btn-primary" id="btn-upload" onclick="event.stopPropagation(); enviar()" disabled>Importar extrato</button>
-    </div>
-    <div><span class="toast" id="toast"></span></div>
-  </div>
+  <!-- DASHBOARD PAGE -->
+  <div class="page active" id="page-dashboard">
 
-  <!-- MONTH BAR -->
-  <div class="month-bar" id="month-bar">
-    <span class="month-label">Mês</span>
-  </div>
+    <div class="upload-area" id="drop-zone" onclick="document.getElementById('ofx').click()">
+      <input type="file" id="ofx" accept=".ofx,.pdf">
+      <div class="upload-label">📂 Arraste <strong>.ofx</strong> ou <strong>.pdf</strong> ou <span>escolha do computador</span></div>
+      <div class="arquivo-selecionado" id="arquivo-selecionado">
+        <span>📄</span>
+        <span class="arquivo-nome" id="arquivo-nome"></span>
+        <button class="arquivo-remover" onclick="event.stopPropagation(); limparArquivo()">✕</button>
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="btn-upload" onclick="event.stopPropagation(); enviar()" disabled>Importar extrato</button>
+      </div>
+      <div><span class="toast" id="toast"></span></div>
+    </div>
 
-  <!-- SINGLE MODE -->
-  <div id="mode-single">
-    <div class="stats-row" id="stats-single"></div>
-    <div class="section-header">
-      <span class="section-title">Transações</span>
-      <div style="display:flex;gap:8px;align-items:center">
-        <span class="tx-count" id="count-single">0</span>
-        <button class="btn btn-danger" onclick="zerar()" style="padding:3px 8px;font-size:11px">Zerar tudo</button>
+    <div class="month-bar" id="month-bar">
+      <span class="month-label">Mês</span>
+    </div>
+
+    <!-- SINGLE MODE -->
+    <div id="mode-single">
+      <div class="stats-row" id="stats-single"></div>
+      <div class="section-header">
+        <span class="section-title">Transações</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="tx-count" id="count-single">0</span>
+          <button class="btn btn-danger" onclick="zerar()" style="padding:3px 8px;font-size:11px">Zerar tudo</button>
+        </div>
+      </div>
+      <div class="tx-list" id="lista-single">
+        <div class="empty"><div class="empty-icon">🪙</div>Importe um extrato para começar.</div>
       </div>
     </div>
-    <div class="tx-list" id="lista-single">
-      <div class="empty"><div class="empty-icon">🪙</div>Importe um extrato para começar.</div>
+
+    <!-- COMPARE MODE -->
+    <div id="mode-compare" style="display:none">
+      <div class="month-bar" id="month-bar-b" style="margin-bottom:16px">
+        <span class="month-label" style="color:var(--purple)">Comparar com</span>
+      </div>
+      <div class="compare-grid">
+        <div class="compare-panel" id="panel-a">
+          <div class="panel-header"><span class="panel-title a" id="title-a">—</span></div>
+          <div class="stats-row" id="stats-a"></div>
+          <div class="section-header">
+            <span class="section-title">Transações</span>
+            <span class="tx-count" id="count-a">0</span>
+          </div>
+          <div class="tx-list" id="lista-a"><div class="empty"><div class="empty-icon">🪙</div>Selecione um mês.</div></div>
+        </div>
+        <div class="compare-panel" id="panel-b">
+          <div class="panel-header"><span class="panel-title b" id="title-b">—</span></div>
+          <div class="stats-row" id="stats-b"></div>
+          <div class="section-header">
+            <span class="section-title">Transações</span>
+            <span class="tx-count" id="count-b">0</span>
+          </div>
+          <div class="tx-list" id="lista-b"><div class="empty"><div class="empty-icon">🪙</div>Selecione um mês.</div></div>
+        </div>
+      </div>
     </div>
   </div>
 
-  <!-- COMPARE MODE -->
-  <div id="mode-compare" style="display:none">
-    <div class="month-bar" id="month-bar-b" style="margin-bottom:16px">
-      <span class="month-label" style="color:var(--purple)">Comparar com</span>
+  <!-- CATEGORIAS PAGE -->
+  <div class="page" id="page-categorias">
+    <div class="cat-page-header">
+      <span class="cat-page-title">Categorias</span>
     </div>
-    <div class="compare-grid">
-      <div class="compare-panel" id="panel-a">
-        <div class="panel-header">
-          <span class="panel-title a" id="title-a">—</span>
+
+    <div class="cat-form">
+      <div class="cat-form-title">Nova categoria</div>
+      <div class="cat-form-row">
+        <div class="input-group">
+          <label class="input-label">Nome</label>
+          <input class="input" id="cat-nome" placeholder="ex: Academia" maxlength="40">
         </div>
-        <div class="stats-row" id="stats-a"></div>
-        <div class="section-header">
-          <span class="section-title">Transações</span>
-          <span class="tx-count" id="count-a">0</span>
+        <div class="input-group">
+          <label class="input-label">Ícone</label>
+          <input class="input input-icon" id="cat-icone" placeholder="🏋️" maxlength="2">
         </div>
-        <div class="tx-list" id="lista-a"><div class="empty"><div class="empty-icon">🪙</div>Selecione um mês.</div></div>
+        <div class="input-group">
+          <label class="input-label" style="opacity:0">.</label>
+          <button class="btn btn-primary" onclick="criarCategoria()">Criar</button>
+        </div>
       </div>
-      <div class="compare-panel" id="panel-b">
-        <div class="panel-header">
-          <span class="panel-title b" id="title-b">—</span>
-        </div>
-        <div class="stats-row" id="stats-b"></div>
-        <div class="section-header">
-          <span class="section-title">Transações</span>
-          <span class="tx-count" id="count-b">0</span>
-        </div>
-        <div class="tx-list" id="lista-b"><div class="empty"><div class="empty-icon">🪙</div>Selecione um mês.</div></div>
-      </div>
+    </div>
+
+    <div class="cat-list" id="cat-list">
+      <div class="empty"><div class="empty-icon">🏷️</div>Nenhuma categoria criada ainda.</div>
     </div>
   </div>
 
 </main>
 
+<!-- MODAL CATEGORIA -->
+<div class="modal-overlay" id="modal-overlay" onclick="fecharModal(event)">
+  <div class="modal">
+    <div class="modal-title">Categorizar transação</div>
+    <div class="modal-sub" id="modal-desc">—</div>
+    <div class="cat-grid" id="modal-cat-grid"></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancelar</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const MESES = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
   let allTxs = [];
+  let allCats = [];
   let mode = 'single';
-  let selectedA = null;
-  let selectedB = null;
+  let selectedA = null, selectedB = null;
+  let modalTxId = null;
+
+  // --- NAVIGATION ---
+  function goPage(p) {
+    document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(`page-${p}`).classList.add('active');
+    document.getElementById(`nav-${p}`).classList.add('active');
+    document.getElementById('mode-toggle').style.display = p === 'dashboard' ? '' : 'none';
+    if (p === 'categorias') renderCatPage();
+  }
 
   // --- UPLOAD ---
   const ofxInput  = document.getElementById("ofx");
@@ -370,12 +414,8 @@
       showToast(`✓ ${d.inseridas} transações importadas`, "ok");
       limparArquivo();
       await carregar();
-    } catch {
-      showToast("Erro ao importar.", "err");
-    } finally {
-      btnUpload.disabled = false;
-      btnUpload.textContent = "Importar extrato";
-    }
+    } catch { showToast("Erro ao importar.", "err"); }
+    finally { btnUpload.disabled = false; btnUpload.textContent = "Importar extrato"; }
   }
 
   async function zerar() {
@@ -408,9 +448,9 @@
   }
 
   function renderMonthBar() {
-    const bar = document.getElementById("month-bar");
+    const bar  = document.getElementById("month-bar");
     const barB = document.getElementById("month-bar-b");
-    const disponiveis = mesesComDados();
+    const disp = mesesComDados();
 
     const makeBtn = (ym, isB) => {
       const [ano, mes] = ym.split("-");
@@ -419,22 +459,20 @@
       btn.className = "month-btn has-data";
       btn.innerHTML = `${label}<span class="dot"></span>`;
       if (!isB && selectedA === ym) btn.classList.add("selected");
-      if (isB && selectedB === ym) btn.classList.add("selected-b");
+      if (isB  && selectedB === ym) btn.classList.add("selected-b");
       btn.onclick = () => {
         if (!isB) { selectedA = ym; renderMonthBar(); renderSingle(); renderCompare(); }
-        else { selectedB = ym; renderMonthBar(); renderCompare(); }
+        else       { selectedB = ym; renderMonthBar(); renderCompare(); }
       };
       return btn;
     };
 
-    // Bar A (sempre visível)
     bar.innerHTML = '<span class="month-label">Mês</span>';
-    disponiveis.forEach(ym => bar.appendChild(makeBtn(ym, false)));
+    disp.forEach(ym => bar.appendChild(makeBtn(ym, false)));
 
-    // Bar B (só no modo compare)
     if (barB) {
       barB.innerHTML = '<span class="month-label" style="color:var(--purple)">Comparar com</span>';
-      disponiveis.forEach(ym => barB.appendChild(makeBtn(ym, true)));
+      disp.forEach(ym => barB.appendChild(makeBtn(ym, true)));
     }
   }
 
@@ -444,38 +482,41 @@
   function renderStats(containerId, txs, deltaTxs) {
     const saidas   = txs.filter(t => t.valor < 0).reduce((s, t) => s + Math.abs(t.valor), 0);
     const entradas = txs.filter(t => t.valor > 0).reduce((s, t) => s + t.valor, 0);
-    const qtd      = txs.length;
-
-    let deltaHtml = "";
-    if (deltaTxs) {
-      const dSaidas   = txs.filter(t => t.valor < 0).reduce((s,t) => s+Math.abs(t.valor), 0) - deltaTxs.filter(t => t.valor < 0).reduce((s,t) => s+Math.abs(t.valor), 0);
-      const dEntradas = entradas - deltaTxs.filter(t => t.valor > 0).reduce((s,t) => s+t.valor, 0);
-      deltaHtml = [
-        `<div class="delta ${dSaidas > 0 ? 'up' : 'down'}" style="display:block">${dSaidas > 0 ? '▲' : '▼'} ${fmt(Math.abs(dSaidas))} vs anterior</div>`,
-        `<div class="delta ${dEntradas < 0 ? 'up' : 'down'}" style="display:block">${dEntradas > 0 ? '▲' : '▼'} ${fmt(Math.abs(dEntradas))} vs anterior</div>`,
-        ``
-      ];
-    }
 
     const cards = [
-      { label: "Total gasto", value: fmt(saidas), cls: "red", delta: deltaTxs ? deltaHtml[0] : "" },
-      { label: "Entradas",    value: fmt(entradas), cls: "green", delta: deltaTxs ? deltaHtml[1] : "" },
-      { label: "Transações",  value: qtd, cls: "blue", delta: "" },
+      { label: "Total gasto", value: fmt(saidas), cls: "red" },
+      { label: "Entradas",    value: fmt(entradas), cls: "green" },
+      { label: "Transações",  value: txs.length, cls: "blue" },
     ];
 
+    if (deltaTxs) {
+      const dS = saidas - deltaTxs.filter(t=>t.valor<0).reduce((s,t)=>s+Math.abs(t.valor),0);
+      const dE = entradas - deltaTxs.filter(t=>t.valor>0).reduce((s,t)=>s+t.valor,0);
+      cards[0].delta = `<div class="delta ${dS>0?'up':'down'}">${dS>0?'▲':'▼'} ${fmt(Math.abs(dS))} vs anterior</div>`;
+      cards[1].delta = `<div class="delta ${dE<0?'up':'down'}">${dE>0?'▲':'▼'} ${fmt(Math.abs(dE))} vs anterior</div>`;
+    }
+
     const container = document.getElementById(containerId);
-    container.innerHTML = cards.map((c, i) => `
+    container.innerHTML = cards.map((c,i) => `
       <div class="stat-card" style="transition-delay:${i*60}ms">
         <div class="stat-label">${c.label}</div>
         <div class="stat-value ${c.cls}">${c.value}</div>
-        ${c.delta}
-      </div>
-    `).join("");
-
+        ${c.delta||""}
+      </div>`).join("");
     setTimeout(() => container.querySelectorAll(".stat-card").forEach(el => el.classList.add("visible")), 50);
   }
 
   // --- TX LIST ---
+  function badgeClass(cat) {
+    const padrao = ['mercado','transporte','alimentacao','saude','lazer','outros'];
+    return padrao.includes(cat) ? `badge-${cat}` : 'badge-custom';
+  }
+
+  function catLabel(cat) {
+    const c = allCats.find(x => x.nome.toLowerCase() === cat?.toLowerCase());
+    return c ? `${c.icone} ${c.nome}` : cat;
+  }
+
   function renderList(containerId, countId, txs) {
     const lista = document.getElementById(containerId);
     document.getElementById(countId).textContent = txs.length;
@@ -486,57 +527,128 @@
     }
 
     lista.innerHTML = txs.map((tx, i) => `
-      <div class="tx-item" style="transition-delay:${Math.min(i*20, 400)}ms">
+      <div class="tx-item" style="transition-delay:${Math.min(i*15,300)}ms" onclick="abrirModal('${tx.id.replace(/'/g,"\\'")}','${tx.descricao.replace(/'/g,"\\'")}')">
         <div>
           <div class="tx-desc">${tx.descricao}</div>
           <div class="tx-meta">
             <span class="tx-date">${tx.data}</span>
-            <span class="badge badge-${tx.categoria}">${tx.categoria}</span>
+            <span class="badge ${badgeClass(tx.categoria)}">${catLabel(tx.categoria)}</span>
+            <span class="tx-edit-hint">✏️ editar categoria</span>
           </div>
         </div>
         <div class="tx-valor ${tx.valor < 0 ? 'neg' : 'pos'}">${fmt(tx.valor)}</div>
-      </div>
-    `).join("");
+      </div>`).join("");
 
     setTimeout(() => lista.querySelectorAll(".tx-item").forEach(el => el.classList.add("visible")), 50);
   }
 
-  // --- RENDER MODES ---
-  function txDoMes(ym) {
-    return ym ? allTxs.filter(t => t.data.startsWith(ym)) : [];
-  }
+  function txDoMes(ym) { return ym ? allTxs.filter(t => t.data.startsWith(ym)) : []; }
 
   function renderSingle() {
-    const txs = txDoMes(selectedA);
-    renderStats("stats-single", txs, null);
-    renderList("lista-single", "count-single", txs);
+    renderStats("stats-single", txDoMes(selectedA), null);
+    renderList("lista-single", "count-single", txDoMes(selectedA));
   }
 
   function renderCompare() {
-    const txsA = txDoMes(selectedA);
-    const txsB = txDoMes(selectedB);
-
-    const labelA = selectedA ? `${MESES[parseInt(selectedA.slice(5))-1]}/${selectedA.slice(2,4)}` : "—";
-    const labelB = selectedB ? `${MESES[parseInt(selectedB.slice(5))-1]}/${selectedB.slice(2,4)}` : "—";
-
-    document.getElementById("title-a").textContent = labelA;
-    document.getElementById("title-b").textContent = labelB;
-
+    const txsA = txDoMes(selectedA), txsB = txDoMes(selectedB);
+    const lA = selectedA ? `${MESES[parseInt(selectedA.slice(5))-1]}/${selectedA.slice(2,4)}` : "—";
+    const lB = selectedB ? `${MESES[parseInt(selectedB.slice(5))-1]}/${selectedB.slice(2,4)}` : "—";
+    document.getElementById("title-a").textContent = lA;
+    document.getElementById("title-b").textContent = lB;
     renderStats("stats-a", txsA, txsB.length ? txsB : null);
     renderStats("stats-b", txsB, txsA.length ? txsA : null);
     renderList("lista-a", "count-a", txsA);
     renderList("lista-b", "count-b", txsB);
   }
 
+  // --- MODAL ---
+  function abrirModal(txId, desc) {
+    modalTxId = txId;
+    document.getElementById("modal-desc").textContent = desc;
+
+    const grid = document.getElementById("modal-cat-grid");
+    const padrao = [
+      { nome: "mercado", icone: "🛒" }, { nome: "transporte", icone: "🚗" },
+      { nome: "alimentacao", icone: "🍽️" }, { nome: "saude", icone: "💊" },
+      { nome: "lazer", icone: "🎮" }, { nome: "outros", icone: "📦" },
+    ];
+    const todas = [...padrao, ...allCats.map(c => ({ nome: c.nome, icone: c.icone }))];
+    const tx = allTxs.find(t => t.id === txId);
+
+    grid.innerHTML = todas.map(c => `
+      <div class="cat-option ${tx?.categoria === c.nome ? 'selected' : ''}" onclick="selecionarCat('${c.nome}')">
+        <span class="cat-icon">${c.icone}</span>
+        <span class="cat-nome">${c.nome}</span>
+      </div>`).join("");
+
+    document.getElementById("modal-overlay").classList.add("open");
+  }
+
+  async function selecionarCat(nome) {
+    await fetch(`/api/transacoes/${encodeURIComponent(modalTxId)}/categoria`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ categoria: nome })
+    });
+    closeModal();
+    await carregar();
+  }
+
+  function closeModal() { document.getElementById("modal-overlay").classList.remove("open"); }
+  function fecharModal(e) { if (e.target === document.getElementById("modal-overlay")) closeModal(); }
+
+  // --- CATEGORIAS PAGE ---
+  async function renderCatPage() {
+    const lista = document.getElementById("cat-list");
+    if (!allCats.length) {
+      lista.innerHTML = `<div class="empty"><div class="empty-icon">🏷️</div>Nenhuma categoria criada ainda.</div>`;
+      return;
+    }
+    lista.innerHTML = allCats.map((c, i) => `
+      <div class="cat-row" style="transition-delay:${i*40}ms">
+        <span class="cat-row-icon">${c.icone}</span>
+        <span class="cat-row-nome">${c.nome}</span>
+        <span class="cat-row-cor" style="background:${c.cor}"></span>
+        <button class="cat-row-del" onclick="deletarCat(${c.id})" title="Remover">✕</button>
+      </div>`).join("");
+    setTimeout(() => lista.querySelectorAll(".cat-row").forEach(el => el.classList.add("visible")), 50);
+  }
+
+  async function criarCategoria() {
+    const nome  = document.getElementById("cat-nome").value.trim();
+    const icone = document.getElementById("cat-icone").value.trim() || "📦";
+    if (!nome) return;
+    await fetch("/api/categorias", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ nome, icone })
+    });
+    document.getElementById("cat-nome").value = "";
+    document.getElementById("cat-icone").value = "";
+    await carregarCats();
+    renderCatPage();
+  }
+
+  async function deletarCat(id) {
+    if (!confirm("Remover esta categoria?")) return;
+    await fetch(`/api/categorias/${id}`, { method: "DELETE" });
+    await carregarCats();
+    renderCatPage();
+  }
+
   // --- LOAD ---
+  async function carregarCats() {
+    const r = await fetch("/api/categorias");
+    allCats = await r.json();
+  }
+
   async function carregar() {
+    await carregarCats();
     const r = await fetch("/api/transacoes");
     allTxs = await r.json();
-
-    const disponiveis = mesesComDados();
-    if (!selectedA && disponiveis.length) selectedA = disponiveis[disponiveis.length - 1];
-    if (!selectedB && disponiveis.length > 1) selectedB = disponiveis[disponiveis.length - 2];
-
+    const disp = mesesComDados();
+    if (!selectedA && disp.length) selectedA = disp[disp.length - 1];
+    if (!selectedB && disp.length > 1) selectedB = disp[disp.length - 2];
     renderMonthBar();
     renderSingle();
     renderCompare();
