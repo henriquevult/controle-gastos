@@ -27,6 +27,16 @@ def get_conn():
         db_url = db_url.replace("postgres://", "postgresql://", 1)
     return psycopg2.connect(db_url)
 
+@app.route("/migrar", methods=["POST"])
+def migrar():
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("ALTER TABLE transacoes ADD COLUMN IF NOT EXISTS categoria_manual TEXT")
+    cur.execute("ALTER TABLE transacoes ADD COLUMN IF NOT EXISTS categoria_custom TEXT")
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True})
+
 @app.route("/zerar", methods=["POST"])
 def zerar():
     conn = get_conn()
