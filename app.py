@@ -203,11 +203,15 @@ def upload():
 def transacoes():
     conn = get_conn()
     cur = conn.cursor()
-    cur.execute("SELECT data, descricao, valor, categoria FROM transacoes ORDER BY data DESC")
+    cur.execute("""
+        SELECT id, data, descricao, valor,
+               COALESCE(categoria_manual, categoria) as categoria
+        FROM transacoes ORDER BY data DESC
+    """)
     rows = cur.fetchall()
     conn.close()
     return jsonify([
-        {"data": r[0], "descricao": r[1], "valor": r[2], "categoria": r[3]}
+        {"id": r[0], "data": r[1], "descricao": r[2], "valor": r[3], "categoria": r[4]}
         for r in rows
     ])
 
@@ -246,20 +250,7 @@ def deletar_categoria(id):
     conn.commit()
     conn.close()
     return jsonify({"ok": True})
-
-@app.route("/api/transacoes/<tid>/categoria", methods=["POST"])
-def atribuir_categoria(tid):
-    d = request.json
-    conn = get_conn()
-    cur = conn.cursor()
-    cur.execute(
-        "UPDATE transacoes SET categoria_manual = %s WHERE id = %s",
-        (d["categoria"], tid)
-    )
-    conn.commit()
-    conn.close()
-    return jsonify({"ok": True})
-
+    
 init_db()
 
 if __name__ == "__main__":
