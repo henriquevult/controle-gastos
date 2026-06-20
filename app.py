@@ -46,22 +46,27 @@ def zerar():
     return jsonify({"ok": True})
 
 def init_db():
-    conn.cursor().execute("""
-    CREATE TABLE IF NOT EXISTS categorias (
-        id SERIAL PRIMARY KEY,
-        nome TEXT UNIQUE NOT NULL,
-        cor TEXT DEFAULT '#388bfd',
-        icone TEXT DEFAULT '📦'
-    )
-""")
     conn = get_conn()
-    conn.cursor().execute("""
+    cur = conn.cursor()
+    cur.execute("""
         CREATE TABLE IF NOT EXISTS transacoes (
             id TEXT PRIMARY KEY,
             data TEXT,
             descricao TEXT,
             valor REAL,
-            categoria TEXT
+            categoria TEXT,
+            categoria_manual TEXT
+        )
+    """)
+    cur.execute("""
+        ALTER TABLE transacoes ADD COLUMN IF NOT EXISTS categoria_manual TEXT
+    """)
+    cur.execute("""
+        CREATE TABLE IF NOT EXISTS categorias (
+            id SERIAL PRIMARY KEY,
+            nome TEXT UNIQUE NOT NULL,
+            cor TEXT DEFAULT '#388bfd',
+            icone TEXT DEFAULT '📦'
         )
     """)
     conn.commit()
