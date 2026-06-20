@@ -206,6 +206,55 @@ def transacoes():
         for r in rows
     ])
 
+@app.route("/api/categorias", methods=["GET"])
+def listar_categorias():
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("SELECT id, nome, cor, icone FROM categorias ORDER BY nome")
+    rows = cur.fetchall()
+    conn.close()
+    return jsonify([{"id": r[0], "nome": r[1], "cor": r[2], "icone": r[3]} for r in rows])
+
+@app.route("/api/categorias", methods=["POST"])
+def criar_categoria():
+    d = request.json
+    conn = get_conn()
+    cur = conn.cursor()
+    try:
+        cur.execute(
+            "INSERT INTO categorias (nome, cor, icone) VALUES (%s, %s, %s) RETURNING id",
+            (d["nome"], d.get("cor", "#388bfd"), d.get("icone", "📦"))
+        )
+        id_ = cur.fetchone()[0]
+        conn.commit()
+        return jsonify({"id": id_, "ok": True})
+    except Exception as e:
+        return jsonify({"erro": str(e)}), 400
+    finally:
+        conn.close()
+
+@app.route("/api/categorias/<int:id>", methods=["DELETE"])
+def deletar_categoria(id):
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute("DELETE FROM categorias WHERE id = %s", (id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True})
+
+@app.route("/api/transacoes/<tid>/categoria", methods=["POST"])
+def atribuir_categoria(tid):
+    d = request.json
+    conn = get_conn()
+    cur = conn.cursor()
+    cur.execute(
+        "UPDATE transacoes SET categoria_manual = %s WHERE id = %s",
+        (d["categoria"], tid)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"ok": True})
+
 init_db()
 
 if __name__ == "__main__":
